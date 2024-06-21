@@ -8,8 +8,19 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import os
 import json 
-import tkinter as tk
-from tkinter import filedialog
+
+try:
+    import tkinter as tk
+    from tkinter import filedialog
+except Exception as e:
+    import tk
+    from tk import  filedialog
+
+
+def clear_console():
+    # Clear console output based on operating system
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 
 
 def read_single_file(*args):
