@@ -8,20 +8,15 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import os
 import json 
+import tkinter as tk
+from tkinter import filedialog
 
-try:
-    import tkinter as tk
-    from tkinter import filedialog
-except Exception as e:
-    import tk
-    from tk import  filedialog
+
 
 
 def clear_console():
     # Clear console output based on operating system
     os.system('cls' if os.name == 'nt' else 'clear')
-
-
 
 def read_single_file(*args):
     try:
@@ -214,7 +209,7 @@ def get_count_tracker_data(full_data_basev2 ,link_tracker  ,  dict_path , explor
             if in_type == "1":
                 content_type = "img"
             elif in_type == "2":
-                content_type = "vif"
+                content_type = "vid"
                 
     
     if os.path.exists(dict_path) and not relaod and explored_links_count == None:
@@ -239,8 +234,6 @@ def get_count_tracker_data(full_data_basev2 ,link_tracker  ,  dict_path , explor
             "un_explored":un_explored,
             dict_key:num_images     
         }  
-        
-        print(count_tracker , "after given the int")
           
     else:
         print("Reloading program data...")
@@ -260,7 +253,6 @@ def get_count_tracker_data(full_data_basev2 ,link_tracker  ,  dict_path , explor
             "un_explored":un_explored,
             dict_key:num_images     
         }
-        print(f"Starting count tracker at {count_tracker}")
         
         save_load_program_data(path = dict_path , data= count_tracker  , mode='w')
         
