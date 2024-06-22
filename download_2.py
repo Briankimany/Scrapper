@@ -5,8 +5,6 @@ import time
 from datetime import timedelta
 from tqdm.auto import tqdm
 import os
-import sys
-import signal
 import concurrent
 from pathlib import Path
 
@@ -38,8 +36,8 @@ def download_resume(response, url, mode, downloaded_size , max_time , chunk_size
             with open(url.full_path, mode) as file:
                 progress_bar.update(downloaded_size / 1024 ** 2)
                 start_time = time.time()
-                # for chunk in response.iter_content(chunk_size=url.chunk_size):
-                while True:
+                for chunk in response.iter_content(chunk_size=url.chunk_size):
+                # while True:
                     chunk = requests.get(url.final_link, stream=True, headers={"Range": f"bytes={downloaded_size}-", "Chunk-size":f"{chunk_size}"}).content
                     try:
                         file.write(chunk)
@@ -166,10 +164,6 @@ def download_bit_by_bit(self):
         self.log(message="got file size as none")
     return None
 
-
-
-
-import signal
 
 class Batches:
     def __init__(self , url_batches) -> None:
