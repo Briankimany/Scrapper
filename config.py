@@ -1,7 +1,6 @@
 
 
 from pathlib import Path
-from allscrappers import Scrapper
 
 test_dir_name = "TESTDIR"
 ROOT_DIR  = Path(test_dir_name)
