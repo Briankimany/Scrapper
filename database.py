@@ -47,9 +47,12 @@ class DataBase:
             Initiates the download of the media files associated with the links, using the `download_files` function.
     """
     
-    def __init__(self ,parent_dir , source:Path  = None ,scrapped_data_base_path :Path = None , max_num = 2000 , batch_size = 3) -> None:
+    def __init__(self ,parent_dir , source  = None ,scrapped_data_base_path :Path = None , max_num = 2000 , batch_size = 3) -> None:
+        
         
         self.source_dir = Path(source) if source else None
+        
+             
         self.scrapped_data_base_path = Path(scrapped_data_base_path) if scrapped_data_base_path else None
         json_files =None
         link_data = None
@@ -58,22 +61,23 @@ class DataBase:
         
         if self.source_dir != None and  self.source_dir.is_dir():
             json_dest = self.source_dir 
-            json_files = list(json_dest.glob("*.json"))
-  
+            json_files = sorted(list(json_dest.glob("*.json")))
+    
         if self.scrapped_data_base_path != None and self.scrapped_data_base_path.is_file():
             link_data = save_load_program_data(self.scrapped_data_base_path)
             
         self.link_data = link_data
         self.json_files = json_files
         
-        self.data = list(self.link_data.items()) if link_data else  self.json_files
-    
+        self.data = sorted(list(self.link_data.items()) if link_data else  self.json_files)
+   
+ 
         if max_num in range(len(self.data)):
             self.data = self.data[0:max_num]
              
         batched_data = list(more_itertools.batched(self.data ,batch_size)) 
    
-        with tqdm(total=len(self.data) , desc="TEsting") as pbar:
+        with tqdm(total=len(self.data) , desc="Initializing") as pbar:
             with ThreadPoolExecutor() as executor:
                 for batch in batched_data:
                     batch_links = []
@@ -111,8 +115,12 @@ class DataBase:
             
     
 if __name__ == "__main__":
-    parent_path = config.ROOT_DIR / "CONTENT"
-    parent_path.mkdir(parents=True , exist_ok=True)
-    db = DataBase(parent_dir=parent_path , scrapped_data_base_path=config.FULL_DATA_BASE_PATH , max_num= 100 , batch_size=5)
-    
-    db.download()
+    # while True:
+        # try:
+            parent_path = config.ROOT_DIR / "CONTENT"
+            parent_path.mkdir(parents=True , exist_ok=True)
+            db = DataBase(parent_dir=parent_path ,source=None,batch_size=5 , scrapped_data_base_path=config.FULL_DATA_BASE_PATH)
+            
+            db.download()
+        # except Exception as e:
+        #     print(str(e))

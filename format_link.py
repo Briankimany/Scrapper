@@ -26,6 +26,7 @@ class FormatLink:
         viable_ext = ['.mp4' , '.mp3' , '.zip' , '.mkv' , '.nfo' , '.url' , '.iso' , '.torrent' , '.bin' , '.exe' , '.url' , '.bat', '.jpg' , '.jpeg']
         
         
+        
         if link_data != None:
             data = link_data
             self.url = link_data[0] 
@@ -34,13 +35,11 @@ class FormatLink:
                 link_data[0] = data[1]
                 link_data[1] = data[0]
                 
-       
             self.extension = f".{self.url.split('.')[-1]}"
             if self.extension.lower() in viable_ext or is_verified_final_link:
                 self.is_final_link = True
             else:
                 self.extension = self.name
-            
             
             if isinstance(link_data[1] , (tuple, list)):
                 self.name = str(link_data[1][0]) +"_"+ generate_random_chars(k=4) if include_radom else  str(link_data[1][0])
@@ -56,10 +55,7 @@ class FormatLink:
                 else:
                     self.name = None
                     self.length = None
-                    # print("setting name to none")
-                    # raise ValueError("link name cant be none")
-        
-
+       
             if self.name != None:
                 try:
                     j =self.name
@@ -95,34 +91,20 @@ class FormatLink:
             if self.is_final_link:
                 if chunk_size != None:
                     self.chunk_size = chunk_size
-                self.prepare_link()
+                
+                if self.json_path.exists() and self.json_path.is_file():
+                    print("Got link data but will be loading from json file" , self.json_path)
+                    self.load_state_from_file(source_json= self.json_path , chunk_size=chunk_size , viable_ext=viable_ext , 
+                                      in_data_base=in_data_base , default_state=default_state)
+                else:
+                    self.prepare_link()
             
         if source_json != None:
-            saved_state = save_load_program_data(path=source_json)
-            # print("Path given is " , source_json)
-            default_state.update(saved_state)
-            # print("data loaded is")
-            for key , value in default_state.items():
-                setattr(self , key , value)
-            # print("state after updating" )
-            if self.extension in viable_ext:
-                self.is_final_link = True
-            # [print(i) for i in self.__dict__.items()]
-            self.in_data_base= in_data_base
-            if chunk_size != None:
-                self.chunk_size = chunk_size
-
-            if self.name != None:
-                try:
-                    j =self.name
-                    j = j.encode().decode()
-                    self.name = j
-                except Exception as e:
-                    pass
+            self.load_state_from_file(source_json= source_json , chunk_size=chunk_size , viable_ext=viable_ext , 
+                                      in_data_base=in_data_base , default_state=default_state)
+        
           
 
-                        
-        
         if parent_dir:
             self.parent_dir = Path(parent_dir)
         else:
@@ -158,14 +140,34 @@ class FormatLink:
                 self.length = change_str_deltatime(self.length)
     
             self.prepare_link() 
-        # [print(i) for i in self.__dict__.items()]
-        # print("\n\n")
+  
         self.parent_dir.mkdir(parents = True , exist_ok = True)
         if self.is_final_link:
             starting_data = self.get_state_data()
-            # print("saving the current attr")
+  
             save_load_program_data(path= self.json_path, data= starting_data , mode='w')
 
+    
+    def load_state_from_file(self , source_json , default_state , chunk_size , viable_ext , in_data_base):
+            saved_state = save_load_program_data(path=source_json)
+            default_state.update(saved_state)
+            for key , value in default_state.items():
+                setattr(self , key , value)
+        
+            if self.extension in viable_ext:
+                self.is_final_link = True
+            self.in_data_base= in_data_base
+            if chunk_size != None:
+                self.chunk_size = chunk_size
+            if self.name != None:
+                try:
+                    j =self.name
+                    j = j.encode().decode()
+                    self.name = j
+                except Exception as e:
+                    pass
+            return self
+    
     
     def see(self):
         text = f"Saving to:{self.full_path}\tName:{self.name}\tLength:{self.length}\tFile size:{self.file_size}\tFinal link:{self.final_link}\n"
@@ -191,7 +193,9 @@ class FormatLink:
     
     
     def prepare_link(self):
+        
         if self.final_link == None:
+            print("dint get a source json for this" , self.final_link , self.short_name)
             self.file_size , self.final_link =  get_file_size(link = self)  
         link = self                
         try:
