@@ -30,7 +30,7 @@ def download_resume(response, url, mode, downloaded_size , max_time , chunk_size
         string_2 = " ".join(url.name.split(" ")[-3:])
         desctription = f"{string_1}...{string_2}"
         
-        response = requests.get(url.final_link, stream=True, headers={"Range": f"bytes={downloaded_size}-"})
+        # response = requests.get(url.final_link, stream=True, headers={"Range": f"bytes={downloaded_size}-"})
                 
         with tqdm(total=round(url.file_size, ndigits=3), desc=desctription) as progress_bar:
             with open(url.full_path, mode) as file:
@@ -88,6 +88,11 @@ def manage_download(url, max_time  , parent_object = None):
 
     downloaded_size = int(os.path.getsize(url.full_path)) if url.full_path.is_file() else 0
     url.remaining_size = (url.file_size * (1024**2)) - downloaded_size
+    
+    if url.file_size <=0:
+        print("This file has zero bytes" , url.short_name)
+        url.delete(all= True)
+        return None
     url.remainig_size_percentage =  url.remaining_size / (url.file_size * (1024**2)) 
     if not url.in_data_base:
         resumeS_from = input(f"Resume from {downloaded_size / 1000 ** 2}")
@@ -101,10 +106,13 @@ def manage_download(url, max_time  , parent_object = None):
         mode = 'ab'
     elif url.remainig_size_percentage == 1:
         mode = 'wb'
-        
+    elif url.remainig_size_percentage > 1:
+        print("File size is larger than hosted file size\n",url.inspect())
+        return None
     else:
-        print("undeterministinc mode")
-        mode == None
+        print("undeterministinc mode" , url.inspect())
+        mode = None
+        return None
     
     response = requests.get(url.final_link, stream=True, headers={"Range": f"bytes={downloaded_size}-"})
     

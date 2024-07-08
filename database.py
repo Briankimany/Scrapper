@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor , as_completed
 from master import save_load_program_data
 from download_2 import download_files
 import config
-
+import time
 class DataBase:
     
     """
@@ -115,12 +115,15 @@ class DataBase:
             
     
 if __name__ == "__main__":
-    # while True:
-        # try:
+    while True:
+        try:
             parent_path = config.ROOT_DIR / "CONTENT"
             parent_path.mkdir(parents=True , exist_ok=True)
-            db = DataBase(parent_dir=parent_path ,source=None,batch_size=5 , scrapped_data_base_path=config.FULL_DATA_BASE_PATH , max_num=5)
+            db = DataBase(parent_dir=parent_path ,source= "TESTDIR/CONTENT/JSON DATA",batch_size=5 , scrapped_data_base_path=None  )
             
-            # db.download()
-        # except Exception as e:
-        #     print(str(e))
+            db.download()
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            time.sleep(600)
+            print(str(e))
