@@ -93,7 +93,6 @@ class FormatLink:
                     self.chunk_size = chunk_size
                 
                 if self.json_path.exists() and self.json_path.is_file():
-                    print("Got link data but will be loading from json file" , self.json_path)
                     self.load_state_from_file(source_json= self.json_path , chunk_size=chunk_size , viable_ext=viable_ext , 
                                       in_data_base=in_data_base , default_state=default_state)
                 else:
@@ -195,7 +194,6 @@ class FormatLink:
     def prepare_link(self):
         
         if self.final_link == None:
-            print("dint get a source json for this" , self.final_link , self.short_name)
             self.file_size , self.final_link =  get_file_size(link = self)  
         link = self                
         try:
@@ -250,7 +248,14 @@ class FormatLink:
             print(text,"\n******")
         except Exception as e:
             self.log(message=str(e))
-    
+            
+    def delete(self , all = False):
+        if self.remainig_size_percentage == 0:
+            os.remove(self.json_path) if self.json_path.exists() else None
+            if all and self.full_path.exists():
+                os.remove(self.full_path)
+            
+
 
 
         

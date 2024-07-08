@@ -119,8 +119,8 @@ if __name__ == "__main__":
         # try:
             parent_path = config.ROOT_DIR / "CONTENT"
             parent_path.mkdir(parents=True , exist_ok=True)
-            db = DataBase(parent_dir=parent_path ,source=None,batch_size=5 , scrapped_data_base_path=config.FULL_DATA_BASE_PATH)
+            db = DataBase(parent_dir=parent_path ,source=None,batch_size=5 , scrapped_data_base_path=config.FULL_DATA_BASE_PATH , max_num=5)
             
-            db.download()
+            # db.download()
         # except Exception as e:
         #     print(str(e))
