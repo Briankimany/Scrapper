@@ -254,11 +254,7 @@ class FormatLink:
             os.remove(self.json_path) if self.json_path.exists() else None
             if all and self.full_path.exists():
                 os.remove(self.full_path)
-            
 
-
-
-        
         
     
 
