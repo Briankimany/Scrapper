@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor , as_completed
 from master import save_load_program_data
 from download_2 import download_files
 import config
-import time
+import os
 class DataBase:
     
     """
@@ -59,24 +59,36 @@ class DataBase:
         self.parent_dir = Path(parent_dir)
         self.all_links = []
         
-        if self.source_dir != None and  self.source_dir.is_dir():
-            json_dest = self.source_dir 
-            json_files = sorted(list(json_dest.glob("*.json")))
-    
-        if self.scrapped_data_base_path != None and self.scrapped_data_base_path.is_file():
-            link_data = save_load_program_data(self.scrapped_data_base_path)
-            
-        self.link_data = link_data
-        self.json_files = json_files
+        if scrapped_data_base_path == None or self.source_dir == None and not (self.scrapped_data_base_path == self.source_dir == None):
+            if self.source_dir != None and  self.source_dir.is_dir() and self.scrapped_data_base_path == None:
+                json_files = sorted(list(self.source_dir.glob("*.json")))
         
-        self.data = sorted(list(self.link_data.items()) if link_data else  self.json_files)
-   
+            if self.scrapped_data_base_path != None and self.scrapped_data_base_path.is_file() and self.source_dir == None:
+                link_data = save_load_program_data(self.scrapped_data_base_path)
+            
+
+            self.link_data = link_data
+            self.json_files = json_files
+            
+            self.data = sorted(list(self.link_data.items()) if link_data else  self.json_files)
+            
+        elif self.scrapped_data_base_path == self.source_dir == None:
+            link_data = save_load_program_data(config.FULL_DATA_BASE_PATH) if config.FULL_DATA_BASE_PATH.exists() else []
+        else:
+            link_data = save_load_program_data(self.scrapped_data_base_path)
+            json_files = sorted(list(self.source_dir.glob("*.json")))
+            
+            self.data = json_files + sorted(list(link_data.items()))  
+            
+            
  
         if max_num in range(len(self.data)):
             self.data = self.data[0:max_num]
              
         batched_data = list(more_itertools.batched(self.data ,batch_size)) 
-   
+        
+        for i in batched_data:
+            print(i)
         with tqdm(total=len(self.data) , desc="Initializing") as pbar:
             with ThreadPoolExecutor() as executor:
                 for batch in batched_data:
@@ -91,15 +103,17 @@ class DataBase:
                     
         
     def initialize_link(self , i):
-        if self.link_data != None :
+        if  isinstance(i , (tuple,list)):
             link_data = i
             json_files = None
-        if self.json_files != None:
+            return FormatLink(link_data=link_data ,parent_dir=self.parent_dir ,in_data_base=True,source_json= json_files)
+        elif i.exists():
             json_files = i 
             link_data = None
-        link_data = FormatLink(link_data=link_data ,parent_dir=self.parent_dir ,in_data_base=True,source_json= json_files)
-        return link_data
-         
+            return FormatLink(link_data=link_data ,parent_dir=self.parent_dir ,in_data_base=True,source_json= json_files)
+        else:
+            print("Got a an unexpected input" , i)
+                
     def download(self):
         try:
             download_files(self.all_links)
@@ -117,13 +131,9 @@ class DataBase:
 if __name__ == "__main__":
     while True:
         try:
-            parent_path = config.ROOT_DIR / "CONTENT"
-            parent_path.mkdir(parents=True , exist_ok=True)
-            db = DataBase(parent_dir=parent_path ,source= "TESTDIR/CONTENT/JSON DATA",batch_size=5 , scrapped_data_base_path=None  )
-            
+            db = DataBase(parent_dir=config.CONTENT_LOCATION ,source= config.JSON_DATA_LOCATION ,
+                          batch_size=config.BATCH_SIZE , scrapped_data_base_path=config.FULL_DATA_BASE_PATH ,
+                          max_num= 100)
             db.download()
         except KeyboardInterrupt:
             break
-        except Exception as e:
-            time.sleep(600)
-            print(str(e))

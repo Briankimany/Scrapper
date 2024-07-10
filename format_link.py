@@ -88,7 +88,6 @@ class FormatLink:
                 self.json_path.parent.mkdir(parents= True , exist_ok=True)
                 self.full_path.parent.mkdir(parents=True , exist_ok=True)
                 
-            if self.is_final_link:
                 if chunk_size != None:
                     self.chunk_size = chunk_size
                 
@@ -137,7 +136,8 @@ class FormatLink:
             
             if not isinstance(self.length ,  timedelta) and self.length != None: 
                 self.length = change_str_deltatime(self.length)
-    
+
+        
             self.prepare_link() 
   
         self.parent_dir.mkdir(parents = True , exist_ok = True)

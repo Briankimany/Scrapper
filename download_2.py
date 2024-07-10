@@ -74,6 +74,7 @@ def download_resume(response, url, mode, downloaded_size , max_time , chunk_size
         url.is_downloaded = True
         file.close()
         url.save_currrent_state()
+        url.delete(all=False)
         return None
     except KeyboardInterrupt:
         print("Breraking in the iner funtion")
@@ -101,6 +102,7 @@ def manage_download(url, max_time  , parent_object = None):
         
     if url.remainig_size_percentage == 0:
         print("File already present")
+        url.delete()
         return None
     if 0 < url.remainig_size_percentage < 1:
         mode = 'ab'
@@ -133,6 +135,7 @@ def manage_download(url, max_time  , parent_object = None):
     else:
         url.log(message=response)
         print("Failed to resume download. New status code UNKNOW conditions:", response.status_code)
+        url.delete(all=True)
         if not url.in_data_base:
             raise ValueError(f"UNKNOW CONITION CHECK TH LOG FILE {url.full_path}")
     return None
