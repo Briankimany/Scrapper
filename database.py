@@ -47,17 +47,26 @@ class DataBase:
             Initiates the download of the media files associated with the links, using the `download_files` function.
     """
     
-    def __init__(self ,parent_dir , source  = None ,scrapped_data_base_path :Path = None , max_num = 2000 , batch_size = 3) -> None:
+    def __init__(self ,parent_dir , source  = None ,scrapped_data_base_path :Path = None , max_num = config.MUX_NUM , batch_size = config.BATCH_SIZE,
+                 db_dict = config.DB_DICT) -> None:
         
-        
-        self.source_dir = Path(source) if source else None
-        
-             
+            
+        self.source_dir = Path(source) if source else None     
         self.scrapped_data_base_path = Path(scrapped_data_base_path) if scrapped_data_base_path else None
         json_files =None
         link_data = None
         self.parent_dir = Path(parent_dir)
         self.all_links = []
+        
+        if db_dict.exists():
+            pass
+        else:
+            if self.scrapped_data_base_path:
+               data = save_load_program_data(path=self.scrapped_data_base_path).copy()
+            else:
+               data = {}
+            save_load_program_data(data=data ,path=db_dict , mode='w')
+
         
         if scrapped_data_base_path == None or self.source_dir == None and not (self.scrapped_data_base_path == self.source_dir == None):
             if self.source_dir != None and  self.source_dir.is_dir() and self.scrapped_data_base_path == None:
