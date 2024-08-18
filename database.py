@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor , as_completed
 from master import save_load_program_data
 from download_2 import download_files
 import config
-import os
+
 class DataBase:
     
     """

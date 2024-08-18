@@ -5,6 +5,8 @@ import time
 from datetime import timedelta
 from tqdm.auto import tqdm
 import os
+import sys
+import signal
 import concurrent
 from pathlib import Path
 
@@ -30,14 +32,14 @@ def download_resume(response, url, mode, downloaded_size , max_time , chunk_size
         string_2 = " ".join(url.name.split(" ")[-3:])
         desctription = f"{string_1}...{string_2}"
         
-        # response = requests.get(url.final_link, stream=True, headers={"Range": f"bytes={downloaded_size}-"})
+        response = requests.get(url.final_link, stream=True, headers={"Range": f"bytes={downloaded_size}-"})
                 
         with tqdm(total=round(url.file_size, ndigits=3), desc=desctription) as progress_bar:
             with open(url.full_path, mode) as file:
                 progress_bar.update(downloaded_size / 1024 ** 2)
                 start_time = time.time()
-                for chunk in response.iter_content(chunk_size=url.chunk_size):
-                # while True:
+                # for chunk in response.iter_content(chunk_size=url.chunk_size):
+                while True:
                     chunk = requests.get(url.final_link, stream=True, headers={"Range": f"bytes={downloaded_size}-", "Chunk-size":f"{chunk_size}"}).content
                     try:
                         file.write(chunk)
@@ -63,8 +65,6 @@ def download_resume(response, url, mode, downloaded_size , max_time , chunk_size
                             print("max time reached")
                             break
                         
- 
-                            
                         if url.hard_drive_file_size == url.file_size:
                             break
                     except KeyboardInterrupt:
@@ -74,7 +74,6 @@ def download_resume(response, url, mode, downloaded_size , max_time , chunk_size
         url.is_downloaded = True
         file.close()
         url.save_currrent_state()
-        url.delete(all=False)
         return None
     except KeyboardInterrupt:
         print("Breraking in the iner funtion")
@@ -83,17 +82,8 @@ def download_resume(response, url, mode, downloaded_size , max_time , chunk_size
 
 def manage_download(url, max_time  , parent_object = None):
     
-    file_headers = requests.head(url.final_link)
-    if "File-name" in file_headers.headers:
-        url.full_path = Path(file_headers.headers['File-name'])
-
     downloaded_size = int(os.path.getsize(url.full_path)) if url.full_path.is_file() else 0
     url.remaining_size = (url.file_size * (1024**2)) - downloaded_size
-    
-    if url.file_size <=0:
-        print("This file has zero bytes" , url.short_name)
-        url.delete(all= True)
-        return None
     url.remainig_size_percentage =  url.remaining_size / (url.file_size * (1024**2)) 
     if not url.in_data_base:
         resumeS_from = input(f"Resume from {downloaded_size / 1000 ** 2}")
@@ -102,19 +92,16 @@ def manage_download(url, max_time  , parent_object = None):
         
     if url.remainig_size_percentage == 0:
         print("File already present")
-        url.delete()
         return None
     if 0 < url.remainig_size_percentage < 1:
         mode = 'ab'
     elif url.remainig_size_percentage == 1:
         mode = 'wb'
-    elif url.remainig_size_percentage > 1:
-        print("File size is larger than hosted file size\n",url.inspect())
-        return None
+        
     else:
-        print("undeterministinc mode" , url.inspect())
+        print("undeterministinc mode")
         mode = None
-        return None
+        url.log(message="undeterministic mode")
     
     response = requests.get(url.final_link, stream=True, headers={"Range": f"bytes={downloaded_size}-"})
     
@@ -130,12 +117,11 @@ def manage_download(url, max_time  , parent_object = None):
             return None
                     
     elif response.status_code == 416:
-        url.log(mesage="RANGE IS INSTATISFIABLE")
+        url.log(message="RANGE IS INSTATISFIABLE")
         return None
     else:
         url.log(message=response)
         print("Failed to resume download. New status code UNKNOW conditions:", response.status_code)
-        url.delete(all=True)
         if not url.in_data_base:
             raise ValueError(f"UNKNOW CONITION CHECK TH LOG FILE {url.full_path}")
     return None
@@ -175,6 +161,10 @@ def download_bit_by_bit(self):
         self.log(message="got file size as none")
     return None
 
+
+
+
+import signal
 
 class Batches:
     def __init__(self , url_batches) -> None:
