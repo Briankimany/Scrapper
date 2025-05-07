@@ -1,8 +1,6 @@
-/scrapper
-/__pycache__
-tester.py
-/__pycache__
-*.ipynb
-/TESTDIR
-blue.py
-mine.py
+notebooks/
+*.db
+*__pycache__/
+.venv
+docs/
+LOGS/
